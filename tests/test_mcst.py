@@ -29,12 +29,11 @@ class MonteCarloSearchTree(unittest.TestCase):
 
     def test_evaluation(self):
         winning_position_estimate = self.my_mcst.get_position_estimate()
-        self.assertGreaterEqual(winning_position_estimate, 0.5)
-        self.assertLessEqual(winning_position_estimate, 1.0)
+        self.assertTrue(0.5 <= winning_position_estimate <= 1.0)
 
     def test_starting_position(self):
         result = self.my_mcst.simulate_game_from_position(chess.Board())
-        self.assertIn(result, [1.0, 0.5])
+        self.assertIn(result, [0.0, 0.5, 1.0])
 
 
 if __name__ == '__main__':
