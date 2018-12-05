@@ -3,8 +3,11 @@ language: python
 python:
   - "3.6"
 
+install:
+  - pip install -r requirements.txt
+
 script:
-  - python -m unittest tests
+  - python -m unittest discover -s tests -t tests
 
 notifications:
   email: false
