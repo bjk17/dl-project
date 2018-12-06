@@ -22,10 +22,11 @@ class ResultStringValueConversion(unittest.TestCase):
 
 
 class MonteCarloSearchTree(unittest.TestCase):
+    random_seed = 13
     my_nn = NNModel()
     winning_KQ_vs_K = "k7/8/KQ6/8/8/8/8/8 w - - 0 1"
     winning_board_position = chess.Board(winning_KQ_vs_K)
-    my_mcst = MCST(nnmodel=my_nn, board_position=winning_board_position, simulations=10)
+    my_mcst = MCST(nnmodel=my_nn, board_position=winning_board_position, simulations=10, random_seed=random_seed)
 
     def test_evaluation(self):
         winning_position_estimate = self.my_mcst.get_position_estimate()
@@ -34,6 +35,7 @@ class MonteCarloSearchTree(unittest.TestCase):
     def test_starting_position(self):
         result = self.my_mcst.simulate_game_from_position(chess.Board())
         self.assertIn(result, [0.0, 0.5, 1.0])
+        self.assertEqual(result, 0.5)  # because of fixed random seed
 
 
 if __name__ == '__main__':
