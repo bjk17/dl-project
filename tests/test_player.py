@@ -10,10 +10,10 @@ class PlayerTest(unittest.TestCase):
     my_nn = NNModel(random_seed)
     winning_KQ_vs_K = "k7/8/KQ6/8/8/8/8/8 w - - 0 1"
     winning_board_position = chess.Board(winning_KQ_vs_K)
-    steady_player = Player(my_nn, winning_KQ_vs_K, steady_exploration, random_seed)
+    steady_player = Player(my_nn, steady_exploration, random_seed)
 
     def test_next_move(self):
-        next_move = self.steady_player.return_next_move()
+        next_move = self.steady_player.get_next_move(self.winning_KQ_vs_K)
         self.assertIsNotNone(next_move)
         self.assertTrue(self.winning_board_position.is_legal(next_move))
 
