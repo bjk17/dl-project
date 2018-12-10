@@ -2,6 +2,10 @@ import chess
 import numpy as np
 
 
+def convert_result_string_to_value(result):
+    return float(eval(result))
+
+
 def convert_chess_board_to_nn_matrix(board):
     # (White, Black) x (Pawn, Knight, Bishop, Rook, Queen, King) x (a, ..., h) x (1, ..., 8)
     nn_matrix = np.zeros((2, 6, 8, 8), dtype=bool)
