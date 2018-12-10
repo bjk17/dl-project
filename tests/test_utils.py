@@ -1,7 +1,27 @@
 import unittest
 import chess
 import numpy as np
-from utils import convert_chess_board_to_nn_matrix
+from utils import convert_chess_board_to_nn_matrix, convert_result_string_to_value
+
+
+class ResultStringValueConversion(unittest.TestCase):
+    def test_white_wins(self):
+        result = "1-0"
+        result_value = convert_result_string_to_value(result)
+        expected_result = 1.0
+        self.assertEqual(expected_result, result_value)
+
+    def test_draw(self):
+        result = "1/2-1/2"
+        result_value = convert_result_string_to_value(result)
+        expected_result = 0.0
+        self.assertEqual(expected_result, result_value)
+
+    def test_black_wins(self):
+        result = "0-1"
+        result_value = convert_result_string_to_value(result)
+        expected_result = -1.0
+        self.assertEqual(expected_result, result_value)
 
 
 class BoardToMatrixConversion(unittest.TestCase):
