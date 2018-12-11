@@ -8,5 +8,5 @@ Teaching a Deep Neural Network to solve simple chess endgames solely with Reinfo
 
 ```bash
 mkdir -p trainingdata/
-python selfplay.py trainingdata/batch1.txt 100 models/v1.h5
+python selfplay.py trainingdata/batch1.txt 100 models/v1.h5 models/v2.h5 [random_seed]
 ```
