@@ -23,18 +23,21 @@ def simulate_game_from_position(nn_model, start_position, random_seed=None):
     result = game.result()
     signal = convert_result_string_to_value(result)
     target_signal = signal / 10
-    weakening_factor = 0.9
+    weakening_factor = 0.95
 
     # because we will only be training on endgames that are
     # winning for White we will try this for the time being
     if result == "1/2-1/2":
-        signal = 0.5
         target_signal = 0.1
 
     # Backtracking with learning signal
     fen_signal_list = []
     while len(game.move_stack) > 0:
-        fen_signal_list.append("{},{}".format(game.fen(), signal))
+        if game.turn == chess.WHITE:
+            fen_signal_list.append("{},{}".format(game.fen(), signal))
+        else:
+            fen_signal_list.append("{},{}".format(game.mirror().fen(), -signal))
+
         game.pop()
         signal = (signal - target_signal) * weakening_factor + target_signal
 
