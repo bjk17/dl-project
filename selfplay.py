@@ -22,13 +22,7 @@ def simulate_game_from_position(nn_model_1, nn_model_2, start_position, random_s
 
     result = game.result()
     signal = convert_result_string_to_value(result)
-    target_signal = signal / 10
-    weakening_factor = 0.95
-
-    # because we will only be training on endgames that are
-    # winning for White we will try this for the time being
-    if result == "1/2-1/2":
-        target_signal = 0.1
+    decay = 0.99
 
     # Backtracking with learning signal
     fen_signal_list = []
@@ -38,8 +32,8 @@ def simulate_game_from_position(nn_model_1, nn_model_2, start_position, random_s
         else:
             fen_signal_list.append("{},{}".format(game.mirror().fen(), -signal))
 
+        signal = signal * decay
         game.pop()
-        signal = (signal - target_signal) * weakening_factor + target_signal
 
     # At last, add starting position with weak signal
     fen_signal_list.append("{},{}".format(game.fen(), signal))
