@@ -1,4 +1,5 @@
 import unittest
+import os
 import chess
 from nnmodel import NNModel
 
@@ -18,7 +19,9 @@ class NNModelTest(unittest.TestCase):
         self.assertTrue(model_shitty_path.is_random())
 
     def test_v1_model(self):
-        model_v1 = NNModel(self.random_seed, "../models/a_pretty_bad_one.h5")
+        dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.abspath(os.path.join(dir, '..', 'models', 'a_pretty_bad_one.h5'))
+        model_v1 = NNModel(self.random_seed, model_path)
         self.assertFalse(model_v1.is_random())
         position_estimate = model_v1.get_position_estimate(self.board_starting_position)
         self.assertTrue(-1.0 <= position_estimate <= 1.0)
