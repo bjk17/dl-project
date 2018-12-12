@@ -1,17 +1,15 @@
 import os
 import chess
 import concurrent.futures
+from collections import Counter
 from utils import convert_result_string_to_value
 from nnmodel import NNModel
 from player import Player
 
 
-def simulate_game_from_position(nn_model_1, nn_model_2, start_position, random_seed=None):
-    white_player = Player(nn_model_1, exploration=1, random_seed=random_seed)
-    black_player = Player(nn_model_2, exploration=1, random_seed=random_seed)
-    game = chess.Board(start_position)
-
+def simulate_game_from_position(start_position, white_player, black_player):
     # Generating game
+    game = chess.Board(start_position)
     while not game.is_game_over():
         if game.turn == chess.WHITE:
             next_move = white_player.get_next_move(game.fen())
@@ -41,20 +39,29 @@ def simulate_game_from_position(nn_model_1, nn_model_2, start_position, random_s
     return convert_result_string_to_value(result), fen_signal_list
 
 
-def simulate_games(nn_model_1, nn_model_2, start_position, simulations, output_file, random_seed=None):
+def simulate_games(start_position, simulations, nn_model_white, nn_model_black, exploration=1, output_file='/dev/null',
+                   random_seed=None, multi_process=True):
     # ThreadPoolExecutor() would result in race conditions to the np.random object
     # resulting in non-deterministic outputs between simulations for fixed random seed
     with concurrent.futures.ProcessPoolExecutor() as ppe:
         futures = list()
         for i in range(simulations):
-            futures.append(
-                ppe.submit(simulate_game_from_position, nn_model_1, nn_model_2, start_position,
-                           random_seed + i if random_seed else None))
+            player_random_seed = random_seed + i if random_seed else None
+            white_player = Player(nn_model_white, exploration, player_random_seed)
+            black_player = Player(nn_model_black, exploration, player_random_seed)
+            if multi_process:
+                futures.append(ppe.submit(simulate_game_from_position, start_position, white_player, black_player))
+            else:
+                futures.append(simulate_game_from_position(start_position, white_player, black_player))
 
     with open(output_file, 'w') as file:
         results = []
-        for future in concurrent.futures.as_completed(futures):
-            result, selfplay_training_data = future.result()
+        thing_to_loop_over = concurrent.futures.as_completed(futures) if multi_process else futures
+        for future in thing_to_loop_over:
+            if multi_process:
+                result, selfplay_training_data = future.result()
+            else:
+                result, selfplay_training_data = future
             results.append(result)
             for line in selfplay_training_data:
                 file.write(line)
@@ -67,19 +74,36 @@ def main(arg1, arg2, arg3, arg4, arg5=None):
     try:
         output_games_file = os.path.abspath(arg1)
         nr_of_simulations = int(arg2)
-        nn_model_path_1 = os.path.abspath(arg3)
-        nn_model_path_2 = os.path.abspath(arg4)
+        white_model_path = os.path.abspath(arg3)
+        black_model_path = os.path.abspath(arg4)
         random_seed = int(arg5) if arg5 else None
     except ValueError as e:
         print("Second parameter should be an integer.")
         print(e)
         raise
 
-    nn_player_1 = NNModel(random_seed=random_seed, model_path=nn_model_path_1)
-    nn_player_2 = NNModel(random_seed=random_seed, model_path=nn_model_path_2)
+    # hardcoded starting position
     KQ_vs_K = "8/8/8/3k4/8/3KQ3/8/8 w - - 0 1"
+    exploration = 0.50
 
-    simulate_games(nn_player_1, nn_player_2, KQ_vs_K, nr_of_simulations, output_games_file, random_seed)
+    white_model = NNModel(random_seed=random_seed, model_path=white_model_path)
+    black_model = NNModel(random_seed=random_seed, model_path=black_model_path)
+
+    print("White player: '{}'".format('random' if white_model.is_random() else white_model_path))
+    print("Black player: '{}'".format('random' if black_model.is_random() else black_model_path))
+    print("Simulating {} games from starting position".format(nr_of_simulations))
+    print(chess.Board(KQ_vs_K))
+    print()
+
+    # Temporarily disabling multi-processing of game simulation because of an unknown bug
+    multi_process = False
+    results = simulate_games(KQ_vs_K, nr_of_simulations, white_model, black_model, exploration, output_games_file,
+                             random_seed, multi_process)
+    counter = Counter(results)
+
+    print(" -> White wins: {}".format(counter[1]))
+    print(" -> Draws: {}".format(counter[0]))
+    print(" -> Black wins: {}".format(counter[-1]))
 
 
 if __name__ == '__main__':

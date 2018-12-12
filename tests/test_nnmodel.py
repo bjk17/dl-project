@@ -20,7 +20,7 @@ class NNModelTest(unittest.TestCase):
 
     def test_v1_model(self):
         dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.abspath(os.path.join(dir, '..', 'models', 'a_pretty_bad_one.h5'))
+        model_path = os.path.abspath(os.path.join(dir, '..', 'models', 'v1.h5'))
         model_v1 = NNModel(self.random_seed, model_path)
         self.assertFalse(model_v1.is_random())
         position_estimate = model_v1.get_position_estimate(self.board_starting_position)
