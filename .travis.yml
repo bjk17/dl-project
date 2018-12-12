@@ -5,6 +5,7 @@ python:
 
 install:
   - pip install -r requirements.txt
+  - pip install tensorflow
 
 script:
   - python -m unittest discover -s tests -t tests
