@@ -51,13 +51,18 @@ class SelfPlayTest(unittest.TestCase):
 
 class ArgumentsTest(unittest.TestCase):
     arg1 = "/dev/null"  # output path to write training data
-    arg2 = 10
+    arg2 = 10  # simulations
     arg3 = "path/to/model/v1"
     arg4 = "path/to/model/v2"
+    arg5 = 0.50  # exploration
 
-    def test_not_integer(self):
+    def test_not_an_integer(self):
         not_an_integer = "!#$%&/()="
-        self.assertRaises(ValueError, main, self.arg1, not_an_integer, self.arg3, self.arg4)
+        self.assertRaises(ValueError, main, self.arg1, not_an_integer, self.arg3, self.arg4, self.arg5)
+
+    def test_not_a_float(self):
+        not_a_float = "!#$%&/()="
+        self.assertRaises(ValueError, main, self.arg1, self.arg2, self.arg3, self.arg4, not_a_float)
 
 
 if __name__ == '__main__':

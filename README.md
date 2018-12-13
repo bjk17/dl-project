@@ -17,5 +17,5 @@ pip install --upgrade https://storage.googleapis.com/tensorflow/mac/cpu/tensorfl
 
 ```bash
 mkdir -p trainingdata/
-python selfplay.py trainingdata/batch1.txt 100 models/v1.h5 models/v2.h5 [random_seed]
+python selfplay.py trainingdata/batch1.txt 100 models/v1.h5 models/v2.h5 0.0 [random_seed]
 ```

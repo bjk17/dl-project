@@ -39,7 +39,7 @@ def simulate_game_from_position(start_position, white_player, black_player):
     return convert_result_string_to_value(result), fen_signal_list
 
 
-def simulate_games(start_position, simulations, nn_model_white, nn_model_black, exploration=1, output_file='/dev/null',
+def simulate_games(start_position, simulations, nn_model_white, nn_model_black, exploration, output_file='/dev/null',
                    random_seed=None, multi_process=True):
     # ThreadPoolExecutor() would result in race conditions to the np.random object
     # resulting in non-deterministic outputs between simulations for fixed random seed
@@ -70,28 +70,30 @@ def simulate_games(start_position, simulations, nn_model_white, nn_model_black, 
     return results
 
 
-def main(arg1, arg2, arg3, arg4, arg5=None):
+def main(arg1, arg2, arg3, arg4, arg5, arg6=None):
     try:
         output_games_file = os.path.abspath(arg1)
         nr_of_simulations = int(arg2)
         white_model_path = os.path.abspath(arg3)
         black_model_path = os.path.abspath(arg4)
-        random_seed = int(arg5) if arg5 else None
+        exploration = float(arg5) if arg5 else None
+        random_seed = int(arg6) if arg6 else None
     except ValueError as e:
-        print("Second parameter should be an integer.")
+        print("Second parameter (simulations) should be an integer and the fith (exploration) a float.")
         print(e)
         raise
 
     # hardcoded starting position
     KQ_vs_K = "8/8/8/3k4/8/3KQ3/8/8 w - - 0 1"
-    exploration = 0.50
 
     white_model = NNModel(random_seed=random_seed, model_path=white_model_path)
     black_model = NNModel(random_seed=random_seed, model_path=black_model_path)
 
     print("White player: '{}'".format('random' if white_model.is_random() else white_model_path))
     print("Black player: '{}'".format('random' if black_model.is_random() else black_model_path))
-    print("Simulating {} games from starting position".format(nr_of_simulations))
+    print("Simulating {} games with exploration '{}' and random_seed '{}' from position".format(nr_of_simulations,
+                                                                                                exploration,
+                                                                                                random_seed))
     print(chess.Board(KQ_vs_K))
     print()
 
@@ -110,7 +112,7 @@ if __name__ == '__main__':
     import sys
 
     args = sys.argv
-    if len(args) <= 5:
-        main(args[1], args[2], args[3], args[4])
-    else:
+    if len(args) <= 6:
         main(args[1], args[2], args[3], args[4], args[5])
+    else:
+        main(args[1], args[2], args[3], args[4], args[5], args[6])
