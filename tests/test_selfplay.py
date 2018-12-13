@@ -1,4 +1,5 @@
 import unittest
+import os
 import chess
 import chess.syzygy
 from collections import Counter
@@ -10,20 +11,24 @@ from selfplay import main, simulate_game_from_position, simulate_games
 class SelfPlayTest(unittest.TestCase):
     exploration = 0
     output_path = "/dev/null"
-    winning_KQ_vs_K = "k7/8/KQ6/8/8/8/8/8 w - - 0 1"
+    KQ_vs_K_white_checkmates_in_one = "k7/8/KQ6/8/8/8/8/8 w - - 0 1"
     backtrack_with_learning_signal = True
 
     white_random_seed = 13
     black_random_seed = 42
+
+    dir = os.path.dirname(os.path.abspath(__file__))
+    nonsense_path = os.path.abspath(os.path.join(dir, '..', 'nonsense', 'path'))
+    tablebase_path = os.path.abspath(os.path.join(dir, '..', 'tablebases', 'syzygy', 'regular'))
 
     white_nn = NNModel(random_seed=white_random_seed)
     black_nn = NNModel(random_seed=black_random_seed)
     white_player = ModelPlayer(white_nn, exploration, white_random_seed)
     black_player = ModelPlayer(black_nn, exploration, black_random_seed)
 
-    def test_single_simulation(self):
+    def test_simulation_from_position(self):
         result, selfplay_training_data = simulate_game_from_position(
-            self.winning_KQ_vs_K,
+            self.KQ_vs_K_white_checkmates_in_one,
             self.white_player,
             self.black_player,
             self.backtrack_with_learning_signal
@@ -33,12 +38,23 @@ class SelfPlayTest(unittest.TestCase):
         # self.assertEqual(result, 0)
         # self.assertEqual(len(selfplay_training_data), 87)
 
+    def test_one_game_simulation_with_tablebases(self):
+        results = simulate_games(
+            self.KQ_vs_K_white_checkmates_in_one,
+            1,
+            self.nonsense_path,
+            self.tablebase_path,
+            self.exploration,
+            self.output_path,
+            self.black_random_seed
+        )
+
     def test_starting_positions(self):
         results = simulate_games(
             chess.STARTING_FEN,
             4,
-            self.white_nn,
-            self.black_nn,
+            self.nonsense_path,
+            self.nonsense_path,
             self.exploration,
             self.output_path,
             self.black_random_seed

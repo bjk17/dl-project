@@ -4,7 +4,7 @@ import concurrent.futures
 from collections import Counter
 from utils import convert_result_string_to_value
 from nnmodel import NNModel
-from player import ModelPlayer
+from player import ModelPlayer, TablebasePlayer
 
 
 def simulate_game_from_position(start_position, white_player, black_player, backtrack_with_learning_signal):
@@ -40,8 +40,19 @@ def simulate_game_from_position(start_position, white_player, black_player, back
     return convert_result_string_to_value(result), fen_signal_list
 
 
-def simulate_games(start_position, simulations, nn_model_white, nn_model_black, exploration, output_file='/dev/null',
-                   random_seed=None, multi_process=True):
+def simulate_games(start_position, simulations, white_model_path, black_model_path, exploration,
+                   output_file='/dev/null', random_seed=None, multi_process=False):
+    if 'tablebases' in white_model_path:
+        white_tablebase_player = TablebasePlayer(white_model_path)
+    else:
+        white_tablebase_player = None
+        white_model = NNModel(random_seed=random_seed, model_path=white_model_path)
+
+    if 'tablebases' in black_model_path:
+        black_tablebase_player = TablebasePlayer(black_model_path)
+    else:
+        black_tablebase_player = None
+        black_model = NNModel(random_seed=random_seed, model_path=black_model_path)
 
     if output_file.startswith('/dev/null'):
         # save computation time
@@ -55,8 +66,8 @@ def simulate_games(start_position, simulations, nn_model_white, nn_model_black, 
         futures = list()
         for i in range(simulations):
             player_random_seed = random_seed + i if random_seed else None
-            white_player = ModelPlayer(nn_model_white, exploration, player_random_seed)
-            black_player = ModelPlayer(nn_model_black, exploration, player_random_seed)
+            white_player = white_tablebase_player or ModelPlayer(white_model, exploration, player_random_seed)
+            black_player = black_tablebase_player or ModelPlayer(black_model, exploration, player_random_seed)
             if multi_process:
                 futures.append(ppe.submit(simulate_game_from_position, start_position, white_player, black_player,
                                           backtrack_with_learning_signal))
@@ -84,9 +95,9 @@ def main(arg1, arg2, arg3, arg4, arg5, arg6=None):
     try:
         output_games_file = os.path.abspath(arg1)
         nr_of_simulations = int(arg2)
-        white_model_path = os.path.abspath(arg3)
-        black_model_path = os.path.abspath(arg4)
-        exploration = float(arg5) if arg5 else None
+        white_path = os.path.abspath(arg3)
+        black_path = os.path.abspath(arg4)
+        exploration = float(arg5)
         random_seed = int(arg6) if arg6 else None
     except ValueError as e:
         print("Second parameter (simulations) should be an integer and the fith (exploration) a float.")
@@ -96,20 +107,26 @@ def main(arg1, arg2, arg3, arg4, arg5, arg6=None):
     # hardcoded starting position
     KQ_vs_K = "8/8/8/3k4/8/3KQ3/8/8 w - - 0 1"
 
-    white_model = NNModel(random_seed=random_seed, model_path=white_model_path)
-    black_model = NNModel(random_seed=random_seed, model_path=black_model_path)
+    if 'tablebases' in white_path:
+        print("White player: '{}'".format(white_path))
+    else:
+        white_model = NNModel(random_seed=random_seed, model_path=white_path)
+        print("White player: '{}'".format('random' if white_model.is_random() else white_path))
 
-    print("White player: '{}'".format('random' if white_model.is_random() else white_model_path))
-    print("Black player: '{}'".format('random' if black_model.is_random() else black_model_path))
-    print("Simulating {} games with exploration '{}' and random_seed '{}' from position".format(nr_of_simulations,
-                                                                                                exploration,
-                                                                                                random_seed))
+    if 'tablebases' in black_path:
+        print("Black player: '{}'".format(black_path))
+    else:
+        black_model = NNModel(random_seed=random_seed, model_path=black_path)
+        print("Black player: '{}'".format('random' if black_model.is_random() else black_path))
+
+    print("(random_seed: {}, exploration: {})".format(random_seed, exploration))
+    print("Simulating {} games from position".format(nr_of_simulations))
     print(chess.Board(KQ_vs_K))
     print()
 
     # Temporarily disabling multi-processing of game simulation because of an unknown bug
     multi_process = False
-    results = simulate_games(KQ_vs_K, nr_of_simulations, white_model, black_model, exploration, output_games_file,
+    results = simulate_games(KQ_vs_K, nr_of_simulations, white_path, black_path, exploration, output_games_file,
                              random_seed, multi_process)
     counter = Counter(results)
 
