@@ -1,4 +1,5 @@
 import chess
+import chess.syzygy
 import numpy as np
 from interface import implements, Interface
 
