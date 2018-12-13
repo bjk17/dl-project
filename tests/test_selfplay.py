@@ -1,8 +1,9 @@
 import unittest
 import chess
+import chess.syzygy
 from collections import Counter
 from nnmodel import NNModel
-from player import Player
+from player import ModelPlayer
 from selfplay import main, simulate_game_from_position, simulate_games
 
 
@@ -16,8 +17,8 @@ class SelfPlayTest(unittest.TestCase):
 
     white_nn = NNModel(random_seed=white_random_seed)
     black_nn = NNModel(random_seed=black_random_seed)
-    white_player = Player(white_nn, exploration, white_random_seed)
-    black_player = Player(black_nn, exploration, black_random_seed)
+    white_player = ModelPlayer(white_nn, exploration, white_random_seed)
+    black_player = ModelPlayer(black_nn, exploration, black_random_seed)
 
     def test_single_simulation(self):
         result, selfplay_training_data = simulate_game_from_position(

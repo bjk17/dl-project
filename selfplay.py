@@ -4,7 +4,7 @@ import concurrent.futures
 from collections import Counter
 from utils import convert_result_string_to_value
 from nnmodel import NNModel
-from player import Player
+from player import ModelPlayer
 
 
 def simulate_game_from_position(start_position, white_player, black_player):
@@ -47,8 +47,8 @@ def simulate_games(start_position, simulations, nn_model_white, nn_model_black, 
         futures = list()
         for i in range(simulations):
             player_random_seed = random_seed + i if random_seed else None
-            white_player = Player(nn_model_white, exploration, player_random_seed)
-            black_player = Player(nn_model_black, exploration, player_random_seed)
+            white_player = ModelPlayer(nn_model_white, exploration, player_random_seed)
+            black_player = ModelPlayer(nn_model_black, exploration, player_random_seed)
             if multi_process:
                 futures.append(ppe.submit(simulate_game_from_position, start_position, white_player, black_player))
             else:

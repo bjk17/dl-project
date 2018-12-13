@@ -13,6 +13,15 @@ pip install -r requirements.txt
 pip install --upgrade https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-0.12.0-py3-none-any.whl
 ```
 
+## Download Syzygy endgame tablebases
+
+```bash
+mkdir -p tablebases/syzygy/regular
+for endgame in "KQvK"; do
+  wget http://tablebase.sesse.net/syzygy/3-4-5/${endgame}.{rtbw,rtbz} -P tablebases/syzygy/regular
+done
+```
+
 ## Generate self-play data
 
 ```bash

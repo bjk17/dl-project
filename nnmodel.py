@@ -1,7 +1,6 @@
 import os
 import numpy as np
 from utils import convert_chess_board_to_nn_matrix
-from keras.models import load_model
 
 
 class NNModel:
@@ -14,6 +13,7 @@ class NNModel:
             self.model = None
             self.get_position_estimate = self._random_position_estimate
         else:
+            from keras.models import load_model
             self.model = load_model(model_path)
 
     def is_random(self):

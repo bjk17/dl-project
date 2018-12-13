@@ -106,3 +106,7 @@ venv.bak/
 ## IntelliJ IDEA
 .idea/
 dl-project.iml
+
+## Chess specific directories
+trainingdata/
+tablebases/
