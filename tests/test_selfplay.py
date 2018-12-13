@@ -11,6 +11,7 @@ class SelfPlayTest(unittest.TestCase):
     exploration = 0
     output_path = "/dev/null"
     winning_KQ_vs_K = "k7/8/KQ6/8/8/8/8/8 w - - 0 1"
+    backtrack_with_learning_signal = True
 
     white_random_seed = 13
     black_random_seed = 42
@@ -24,7 +25,8 @@ class SelfPlayTest(unittest.TestCase):
         result, selfplay_training_data = simulate_game_from_position(
             self.winning_KQ_vs_K,
             self.white_player,
-            self.black_player
+            self.black_player,
+            self.backtrack_with_learning_signal
         )
 
         # beacuse of fixed random_seed

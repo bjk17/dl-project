@@ -7,7 +7,7 @@ from nnmodel import NNModel
 from player import ModelPlayer
 
 
-def simulate_game_from_position(start_position, white_player, black_player):
+def simulate_game_from_position(start_position, white_player, black_player, backtrack_with_learning_signal):
     # Generating game
     game = chess.Board(start_position)
     while not game.is_game_over():
@@ -24,23 +24,31 @@ def simulate_game_from_position(start_position, white_player, black_player):
 
     # Backtracking with learning signal
     fen_signal_list = []
-    while len(game.move_stack) > 0:
-        if game.turn == chess.WHITE:
-            fen_signal_list.append("{},{}".format(game.fen(), signal))
-        else:
-            fen_signal_list.append("{},{}".format(game.mirror().fen(), -signal))
+    if backtrack_with_learning_signal:
+        while len(game.move_stack) > 0:
+            if game.turn == chess.WHITE:
+                fen_signal_list.append("{},{}".format(game.fen(), signal))
+            else:
+                fen_signal_list.append("{},{}".format(game.mirror().fen(), -signal))
 
-        signal = signal * decay
-        game.pop()
+            signal = signal * decay
+            game.pop()
 
-    # At last, add starting position with weak signal
-    fen_signal_list.append("{},{}".format(game.fen(), signal))
+        # At last, add starting position with weak signal
+        fen_signal_list.append("{},{}".format(game.fen(), signal))
 
     return convert_result_string_to_value(result), fen_signal_list
 
 
 def simulate_games(start_position, simulations, nn_model_white, nn_model_black, exploration, output_file='/dev/null',
                    random_seed=None, multi_process=True):
+
+    if output_file.startswith('/dev/null'):
+        # save computation time
+        backtrack_with_learning_signal = False
+    else:
+        backtrack_with_learning_signal = True
+
     # ThreadPoolExecutor() would result in race conditions to the np.random object
     # resulting in non-deterministic outputs between simulations for fixed random seed
     with concurrent.futures.ProcessPoolExecutor() as ppe:
@@ -50,9 +58,11 @@ def simulate_games(start_position, simulations, nn_model_white, nn_model_black, 
             white_player = ModelPlayer(nn_model_white, exploration, player_random_seed)
             black_player = ModelPlayer(nn_model_black, exploration, player_random_seed)
             if multi_process:
-                futures.append(ppe.submit(simulate_game_from_position, start_position, white_player, black_player))
+                futures.append(ppe.submit(simulate_game_from_position, start_position, white_player, black_player,
+                                          backtrack_with_learning_signal))
             else:
-                futures.append(simulate_game_from_position(start_position, white_player, black_player))
+                futures.append(simulate_game_from_position(start_position, white_player, black_player,
+                                                           backtrack_with_learning_signal))
 
     with open(output_file, 'w') as file:
         results = []
